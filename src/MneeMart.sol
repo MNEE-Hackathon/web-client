@@ -1,4 +1,5 @@
-//SPDX License Identifier:MIT
+// SPDX-License-Identifier: MIT
+
 pragma solidity ^0.8.28;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -7,11 +8,10 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 
-contract MneeMart is Ownable(msg.sender), ReentrancyGuard
+contract MneeMart is Ownable, ReentrancyGuard
     {
     using SafeERC20 for IERC20;
 
-    error Mart_NotOwner();
     error Mart_InvalidTokenAddress();
     error Mart_PlatformFeeTooHigh(uint256 provided, uint256 maxAllowed);
     error EmptyCID();
@@ -30,10 +30,7 @@ contract MneeMart is Ownable(msg.sender), ReentrancyGuard
 
 
 
-
-
     IERC20 public mneeToken;
-    address public Martowner;
     uint256 public platformFeePercentage; // in basis points (100 = 1%)
     uint256 public productCounter;
     uint256 public platformBalance; // Accumulated platform fees
@@ -67,14 +64,8 @@ contract MneeMart is Ownable(msg.sender), ReentrancyGuard
     event ProductPriceUpdated(uint256 indexed productId, uint256 newPrice);
     event PlatformFeeUpdated(uint256 newFee);
     
-    modifier onlyMartOwner() {
-        if(msg.sender != Martowner)
-        {
-            revert Mart_NotOwner();
-        }
-        _;
-    }
-    constructor(address _mneeToken, uint256 _platformFeePercentage) {
+    
+    constructor(address _mneeToken, uint256 _platformFeePercentage) Ownable(msg.sender){
         if (_mneeToken == address(0)) {
         revert Mart_InvalidTokenAddress();
         }
@@ -84,9 +75,9 @@ contract MneeMart is Ownable(msg.sender), ReentrancyGuard
         }
 
         mneeToken = IERC20(_mneeToken);
-        Martowner = msg.sender;
         platformFeePercentage = _platformFeePercentage;
     }
+ 
     // List a new product (anyone can become a seller)
     function listProduct(
         string memory _cid,
@@ -124,7 +115,6 @@ contract MneeMart is Ownable(msg.sender), ReentrancyGuard
     if (!product.active) revert ProductNotActive(_productId);
     if (product.seller == msg.sender) revert CannotBuyOwnProduct();
     if (hasPurchased[msg.sender][_productId])revert ProductAlreadyPurchased(_productId);
-    if (product.price == 0) revert InvalidPrice(0);
 
     uint256 platformFee =(product.price * platformFeePercentage) / 10000;
     uint256 sellerAmount = product.price - platformFee;
@@ -166,19 +156,17 @@ contract MneeMart is Ownable(msg.sender), ReentrancyGuard
 }
     
     // Platform owner withdraws accumulated fees
-    function withdrawPlatformFees() external onlyOwner {
-        uint256 amount = platformBalance;
-        require(amount > 0, "No platform fees to withdraw");
-        
-        platformBalance = 0;
-        
-        require(
-            mneeToken.transfer(Martowner, amount),
-            "MNEE withdrawal failed"
-        );
-        
-        emit PlatformWithdrawal(Martowner, amount);
-    }
+    
+    function withdrawPlatformFees() external onlyOwner nonReentrant {
+    uint256 amount = platformBalance;
+    if (amount == 0) revert NoPlatformFeesToWithdraw();
+
+    platformBalance = 0;
+    mneeToken.safeTransfer(owner(), amount);
+
+    emit PlatformWithdrawal(owner(), amount);
+}
+
     
     // Get product CID (only for buyers who purchased)
     function getProductCID(uint256 _productId)
@@ -249,6 +237,14 @@ contract MneeMart is Ownable(msg.sender), ReentrancyGuard
     // Check if user has purchased a product
     function hasUserPurchased(address _user, uint256 _productId) external view returns (bool) {
         return hasPurchased[_user][_productId];
+    }
+
+     // Update platform fee (owner only)
+    function updatePlatformFee(uint256 _newFeePercentage) external onlyOwner {
+        require(_newFeePercentage <= 2000, "Fee too high (max 20%)");
+        platformFeePercentage = _newFeePercentage;
+        
+        emit PlatformFeeUpdated(_newFeePercentage);
     }
     
     // Get product details (without CID)
