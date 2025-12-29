@@ -1,0 +1,25 @@
+This is a sample text file for MeneeMart demo.
+
+========================
+MeneeMart Demo Content
+========================
+
+Thank you for testing MeneeMart - the Pay-to-Decrypt Web3 Marketplace!
+
+This file demonstrates how encrypted content works:
+1. The seller uploads a file which gets encrypted using Lit Protocol
+2. The encrypted file is stored on IPFS
+3. Only users who purchase the product can decrypt and download
+
+Key Features:
+- MNEE Stablecoin payments on Ethereum
+- Lit Protocol for access control
+- IPFS for decentralized storage
+- No central database required
+
+For more information, visit the MNEE Hackathon page.
+
+========================
+End of Demo Content
+========================
+
