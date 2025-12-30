@@ -192,14 +192,6 @@ export interface ToastData {
 // ===========================================
 
 /**
- * Signed JWT response from API
- */
-export interface SignedJwtResponse {
-  jwt: string;
-  expiresAt: number;
-}
-
-/**
  * Upload response from Pinata
  */
 export interface UploadResponse {

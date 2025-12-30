@@ -46,7 +46,7 @@ export function createAccessControlConditions(
   return [
     {
       contractAddress: addresses.mneeMart,
-      standardContractType: 'Custom',
+      standardContractType: '', // Empty string for custom contract methods
       chain,
       method: 'hasUserPurchased',
       parameters: [':userAddress', String(productId)],

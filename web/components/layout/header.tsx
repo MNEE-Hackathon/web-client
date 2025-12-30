@@ -3,6 +3,8 @@
 /**
  * Header Component
  * Main navigation with wallet connection
+ * 
+ * Uses mounted state to prevent hydration mismatch with theme
  */
 
 import Link from 'next/link';
@@ -10,7 +12,7 @@ import { usePathname } from 'next/navigation';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useTheme } from 'next-themes';
 import { Moon, Sun, Menu, X, ShoppingBag, Plus, User } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { CURRENT_CHAIN, CHAIN_NAMES } from '@/lib/constants';
@@ -23,8 +25,17 @@ const navigation = [
 
 export function Header() {
   const pathname = usePathname();
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, resolvedTheme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // Prevent hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Use resolved theme for consistent behavior
+  const isDark = mounted ? resolvedTheme === 'dark' : true;
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -75,15 +86,23 @@ export function Header() {
             {CHAIN_NAMES[CURRENT_CHAIN]}
           </div>
 
-          {/* Theme Toggle */}
+          {/* Theme Toggle - only render after mount to prevent hydration mismatch */}
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            onClick={() => setTheme(isDark ? 'light' : 'dark')}
             className="hidden sm:flex"
+            suppressHydrationWarning
           >
-            <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-            <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+            {mounted ? (
+              isDark ? (
+                <Sun className="h-4 w-4" />
+              ) : (
+                <Moon className="h-4 w-4" />
+              )
+            ) : (
+              <Sun className="h-4 w-4" />
+            )}
             <span className="sr-only">Toggle theme</span>
           </Button>
 
@@ -95,9 +114,9 @@ export function Header() {
               openAccountModal,
               openChainModal,
               openConnectModal,
-              mounted,
+              mounted: walletMounted,
             }) => {
-              const ready = mounted;
+              const ready = walletMounted;
               const connected = ready && account && chain;
 
               return (
@@ -198,21 +217,22 @@ export function Header() {
             })}
             
             {/* Mobile Theme Toggle */}
-            <button
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="flex w-full items-center space-x-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-            >
-              {theme === 'dark' ? (
-                <Sun className="h-4 w-4" />
-              ) : (
-                <Moon className="h-4 w-4" />
-              )}
-              <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
-            </button>
+            {mounted && (
+              <button
+                onClick={() => setTheme(isDark ? 'light' : 'dark')}
+                className="flex w-full items-center space-x-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+              >
+                {isDark ? (
+                  <Sun className="h-4 w-4" />
+                ) : (
+                  <Moon className="h-4 w-4" />
+                )}
+                <span>{isDark ? 'Light Mode' : 'Dark Mode'}</span>
+              </button>
+            )}
           </div>
         </div>
       )}
     </header>
   );
 }
-

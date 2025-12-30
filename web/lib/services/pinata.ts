@@ -1,29 +1,60 @@
 /**
  * Pinata Service
- * Handles IPFS uploads via Pinata with RootCID directory structure
+ * Handles IPFS uploads via server-side Pinata API
+ * 
+ * Files are uploaded through our API route which uses the Pinata SDK
+ * to keep the JWT secret on the server.
  */
 
 import { PINATA_GATEWAY } from '@/lib/constants';
-import type { ProductMetadata, SignedJwtResponse, UploadResponse } from '@/lib/constants/types';
-
-// Pinata API base URL
-const PINATA_API_URL = 'https://api.pinata.cloud';
+import type { ProductMetadata, UploadResponse } from '@/lib/constants/types';
 
 /**
- * Get a signed JWT for client-side upload
+ * Upload a product directory to Pinata via server-side API
+ * Creates: /metadata.json, /cover.{ext}, /asset.enc
+ * 
+ * @returns The root CID of the uploaded directory
  */
-async function getSignedJwt(fileName?: string): Promise<SignedJwtResponse> {
-  const response = await fetch('/api/pinata/signed-jwt', {
+export async function uploadProductDirectory(
+  coverFile: File,
+  encryptedAsset: Blob,
+  metadata: ProductMetadata,
+  options?: {
+    onProgress?: (stage: string, progress: number) => void;
+  }
+): Promise<string> {
+  const { onProgress } = options || {};
+
+  onProgress?.('preparing', 10);
+
+  // Create form data for server upload
+  const formData = new FormData();
+  formData.append('cover', coverFile);
+  formData.append('asset', new File([encryptedAsset], 'asset.enc', { 
+    type: 'application/octet-stream' 
+  }));
+  formData.append('metadata', JSON.stringify(metadata));
+
+  onProgress?.('uploading', 30);
+
+  // Upload via server-side API route
+  const response = await fetch('/api/pinata/upload', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ fileName }),
+    body: formData,
   });
 
+  onProgress?.('processing', 70);
+
   if (!response.ok) {
-    throw new Error('Failed to get upload authorization');
+    const error = await response.json().catch(() => ({ error: 'Upload failed' }));
+    throw new Error(error.error || 'Failed to upload to IPFS');
   }
 
-  return response.json();
+  const result = await response.json();
+  
+  onProgress?.('complete', 100);
+
+  return result.cid;
 }
 
 /**
@@ -36,98 +67,34 @@ export async function uploadFile(
     onProgress?: (progress: number) => void;
   }
 ): Promise<UploadResponse> {
-  // Get signed JWT
-  const { jwt } = await getSignedJwt(fileName);
-
-  // Create form data
   const formData = new FormData();
-  formData.append('file', file, fileName);
+  
+  // Create minimal metadata for single file upload
+  const metadata = {
+    name: fileName,
+    type: 'single-file',
+  };
+  
+  formData.append('cover', new File([file], fileName));
+  formData.append('asset', new File([new Blob()], 'empty.enc'));
+  formData.append('metadata', JSON.stringify(metadata));
 
-  // Upload to Pinata
-  const response = await fetch(`${PINATA_API_URL}/pinning/pinFileToIPFS`, {
+  const response = await fetch('/api/pinata/upload', {
     method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${jwt}`,
-    },
     body: formData,
   });
 
   if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Upload failed: ${error}`);
+    const error = await response.json().catch(() => ({ error: 'Upload failed' }));
+    throw new Error(error.error || 'Upload failed');
   }
 
   const result = await response.json();
   
   return {
-    cid: result.IpfsHash,
-    size: result.PinSize,
+    cid: result.cid,
+    size: 0, // Size not returned by new API
   };
-}
-
-/**
- * Upload a directory to Pinata (for RootCID structure)
- * Creates: /metadata.json, /cover.png, /asset.enc
- */
-export async function uploadProductDirectory(
-  coverFile: File,
-  encryptedAsset: Blob,
-  metadata: ProductMetadata,
-  options?: {
-    onProgress?: (stage: string, progress: number) => void;
-  }
-): Promise<string> {
-  const { onProgress } = options || {};
-
-  // Get signed JWT for directory upload
-  const { jwt } = await getSignedJwt('product-directory');
-
-  // Create form data with directory structure
-  const formData = new FormData();
-
-  // Determine cover extension
-  const coverExt = coverFile.name.split('.').pop() || 'png';
-
-  // Add cover image
-  formData.append('file', coverFile, `cover.${coverExt}`);
-  onProgress?.('cover', 30);
-
-  // Add encrypted asset
-  formData.append('file', encryptedAsset, 'asset.enc');
-  onProgress?.('asset', 60);
-
-  // Add metadata JSON
-  const metadataBlob = new Blob([JSON.stringify(metadata, null, 2)], {
-    type: 'application/json',
-  });
-  formData.append('file', metadataBlob, 'metadata.json');
-  onProgress?.('metadata', 80);
-
-  // Add pinata options for directory wrapping
-  const pinataOptions = JSON.stringify({
-    wrapWithDirectory: true,
-    cidVersion: 1,
-  });
-  formData.append('pinataOptions', pinataOptions);
-
-  // Upload directory
-  const response = await fetch(`${PINATA_API_URL}/pinning/pinFileToIPFS`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${jwt}`,
-    },
-    body: formData,
-  });
-
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Directory upload failed: ${error}`);
-  }
-
-  const result = await response.json();
-  onProgress?.('complete', 100);
-
-  return result.IpfsHash; // This is the RootCID
 }
 
 /**
@@ -189,4 +156,3 @@ export async function isPinned(cid: string): Promise<boolean> {
     return false;
   }
 }
-
