@@ -141,8 +141,8 @@ export async function decryptFile(
 ): Promise<Blob> {
   const client = await getLitClient();
   const { decryptToFile } = await import('@lit-protocol/encryption');
-  const { LIT_ABILITY } = await import('@lit-protocol/constants');
   const { 
+    LitAbility,
     LitAccessControlConditionResource,
     createSiweMessageWithRecaps, 
     generateAuthSig 
@@ -194,7 +194,7 @@ export async function decryptFile(
     resourceAbilityRequests: [
       {
         resource: litResource,
-        ability: LIT_ABILITY.AccessControlConditionDecryption,
+        ability: LitAbility.AccessControlConditionDecryption,
       },
     ],
     authNeededCallback,
