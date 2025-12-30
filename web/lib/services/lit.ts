@@ -5,7 +5,7 @@
  */
 
 import { LIT_NETWORK, getContractAddresses, CURRENT_CHAIN } from '@/lib/constants';
-import type { LitMetadata, AccessControlCondition } from '@/lib/constants/types';
+import type { LitMetadata, EvmContractCondition } from '@/lib/constants/types';
 
 // Lit Protocol types
 type LitNodeClient = InstanceType<typeof import('@lit-protocol/lit-node-client').LitNodeClient>;
@@ -34,23 +34,42 @@ async function getLitClient(): Promise<LitNodeClient> {
 }
 
 /**
- * Create access control conditions for a product
+ * ABI for the hasUserPurchased function
+ * This is required by Lit Protocol for custom contract method calls
+ */
+const HAS_USER_PURCHASED_ABI = {
+  name: 'hasUserPurchased',
+  inputs: [
+    { name: '_user', type: 'address', internalType: 'address' },
+    { name: '_productId', type: 'uint256', internalType: 'uint256' },
+  ],
+  outputs: [
+    { name: '', type: 'bool', internalType: 'bool' },
+  ],
+  stateMutability: 'view',
+  type: 'function',
+};
+
+/**
+ * Create EVM contract conditions for a product
+ * Uses evmContractConditions (not accessControlConditions) for custom contract methods
  * Requires hasUserPurchased to return true
  */
-export function createAccessControlConditions(
+export function createEvmContractConditions(
   productId: number
-): AccessControlCondition[] {
+): EvmContractCondition[] {
   const addresses = getContractAddresses();
   const chain = CURRENT_CHAIN === 'mainnet' ? 'ethereum' : 'sepolia';
 
   return [
     {
       contractAddress: addresses.mneeMart,
-      standardContractType: '', // Empty string for custom contract methods
+      functionName: 'hasUserPurchased',
+      functionParams: [':userAddress', String(productId)],
+      functionAbi: HAS_USER_PURCHASED_ABI,
       chain,
-      method: 'hasUserPurchased',
-      parameters: [':userAddress', String(productId)],
       returnValueTest: {
+        key: '',
         comparator: '=',
         value: 'true',
       },
@@ -75,14 +94,16 @@ export async function encryptFile(
   const fileBuffer = await file.arrayBuffer();
   const fileBlob = new Blob([fileBuffer], { type: file.type });
 
-  // Create access control conditions
-  const accessControlConditions = createAccessControlConditions(productId);
+  // Create EVM contract conditions (NOT accessControlConditions)
+  const evmContractConditions = createEvmContractConditions(productId);
   const chain = CURRENT_CHAIN === 'mainnet' ? 'ethereum' : 'sepolia';
 
-  // Encrypt the file
+  console.log('Encrypting with evmContractConditions:', JSON.stringify(evmContractConditions, null, 2));
+
+  // Encrypt the file using evmContractConditions
   const { ciphertext, dataToEncryptHash } = await litEncryptFile(
     {
-      accessControlConditions,
+      evmContractConditions,
       file: fileBlob,
       chain,
     },
@@ -92,10 +113,10 @@ export async function encryptFile(
   // The ciphertext is already a Blob
   const encryptedBlob = new Blob([ciphertext], { type: 'application/octet-stream' });
 
-  // Create Lit metadata (without encryptedSymmetricKey for newer Lit versions)
+  // Create Lit metadata
   const litMetadata: LitMetadata = {
     encryptedSymmetricKey: '', // Handled internally by Lit v3+
-    accessControlConditions,
+    evmContractConditions,
     chain,
     dataToEncryptHash,
   };
@@ -120,7 +141,7 @@ export async function decryptFile(
 ): Promise<Blob> {
   const client = await getLitClient();
   const { decryptToFile } = await import('@lit-protocol/encryption');
-  const { LitAccessControlConditionResource, LitAbility } = await import('@lit-protocol/auth-helpers');
+  const { LitPKPResource, LitAbility } = await import('@lit-protocol/auth-helpers');
   const { createSiweMessageWithRecaps, generateAuthSig } = await import('@lit-protocol/auth-helpers');
 
   const walletAddress = await signer.getAddress();
@@ -159,8 +180,8 @@ export async function decryptFile(
     return authSig;
   };
 
-  // Create resource for decryption
-  const litResource = new LitAccessControlConditionResource('*');
+  // Create resource for decryption - use wildcard for EVM contract conditions
+  const litResource = new LitPKPResource('*');
 
   // Get session signatures
   const sessionSigs = await client.getSessionSigs({
@@ -189,10 +210,12 @@ export async function decryptFile(
   }
   const ciphertext = btoa(binaryString);
 
-  // Decrypt the file
+  console.log('Decrypting with evmContractConditions:', JSON.stringify(litMetadata.evmContractConditions, null, 2));
+
+  // Decrypt the file using evmContractConditions
   const decryptedData = await decryptToFile(
     {
-      accessControlConditions: litMetadata.accessControlConditions,
+      evmContractConditions: litMetadata.evmContractConditions,
       chain,
       ciphertext,
       dataToEncryptHash: litMetadata.dataToEncryptHash,
@@ -223,4 +246,3 @@ export async function disconnectLit(): Promise<void> {
 export function isLitConnected(): boolean {
   return litNodeClient !== null && litNodeClient.ready;
 }
-

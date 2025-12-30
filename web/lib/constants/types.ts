@@ -40,10 +40,10 @@ export interface ContractSeller {
  * Lit Protocol encryption metadata
  */
 export interface LitMetadata {
-  /** Encrypted symmetric key (base64) */
+  /** Encrypted symmetric key (base64) - deprecated in Lit v3+ */
   encryptedSymmetricKey: string;
-  /** Access control conditions for decryption */
-  accessControlConditions: AccessControlCondition[];
+  /** EVM Contract conditions for decryption (for custom contract methods) */
+  evmContractConditions: EvmContractCondition[];
   /** Chain for access control */
   chain: string;
   /** Data hash for verification */
@@ -51,15 +51,23 @@ export interface LitMetadata {
 }
 
 /**
- * Lit Access Control Condition
+ * Lit EVM Contract Condition (for custom contract methods)
+ * This is the correct format for custom contract methods in Lit Protocol
  */
-export interface AccessControlCondition {
+export interface EvmContractCondition {
   contractAddress: string;
-  standardContractType: string;
+  functionName: string;
+  functionParams: string[];
+  functionAbi: {
+    name: string;
+    inputs: Array<{ name: string; type: string; internalType?: string }>;
+    outputs: Array<{ name: string; type: string; internalType?: string }>;
+    stateMutability: string;
+    type: string;
+  };
   chain: string;
-  method: string;
-  parameters: string[];
   returnValueTest: {
+    key: string;
     comparator: string;
     value: string;
   };
