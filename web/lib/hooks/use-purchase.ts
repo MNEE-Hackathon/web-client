@@ -87,6 +87,7 @@ export function usePurchase({ productId, price, onSuccess, onError }: UsePurchas
         ...mneeTokenConfig,
         functionName: 'approve',
         args: [mneeMartConfig.address, price],
+        gas: BigInt(100_000), // Explicit gas limit for ERC20 approve
       }, {
         onSuccess: () => {
           setState('waiting_approval');
@@ -118,6 +119,7 @@ export function usePurchase({ productId, price, onSuccess, onError }: UsePurchas
         ...mneeMartConfig,
         functionName: 'purchaseProduct',
         args: [BigInt(productId)],
+        gas: BigInt(300_000), // Explicit gas limit for purchase
       }, {
         onSuccess: () => {
           setState('waiting_purchase');

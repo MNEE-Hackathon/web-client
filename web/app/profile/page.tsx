@@ -275,6 +275,7 @@ function WithdrawButton() {
     writeContract({
       ...mneeMartConfig,
       functionName: 'withdrawSellerBalance',
+      gas: BigInt(150_000), // Explicit gas limit
     });
   };
 

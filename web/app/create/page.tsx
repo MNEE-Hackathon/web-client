@@ -181,11 +181,13 @@ export default function CreateProductPage() {
       // Parse price to wei
       const priceWei = parseUnits(form.price, APP_CONFIG.tokenDecimals);
 
-      // Call contract
+      // Call contract with explicit gas limit to avoid "gas limit too high" error
+      // Sepolia block gas cap is ~16M, so we set a reasonable limit
       writeContract({
         ...mneeMartConfig,
         functionName: 'listProduct',
         args: [rootCid, priceWei, form.name],
+        gas: BigInt(500_000), // Explicit gas limit to avoid estimation issues
       }, {
         onSuccess: () => {
           setUploadState('waiting_tx');
