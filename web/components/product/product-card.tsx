@@ -54,6 +54,7 @@ export function ProductCard({
                 fill
                 className="object-cover transition-transform group-hover:scale-105"
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                unoptimized
               />
               {/* Status Badge */}
               <div className="absolute top-2 right-2 flex gap-2">
