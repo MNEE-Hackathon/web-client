@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useMetadata } from '@/lib/hooks/use-metadata';
 import { formatMneePrice, truncateAddress } from '@/lib/utils';
-import { buildProxiedIpfsUrl } from '@/lib/services/pinata';
+import { getCoverUrl } from '@/lib/services/pinata';
 import type { Product } from '@/lib/constants/types';
 
 interface ProductCardProps {
@@ -36,8 +36,9 @@ export function ProductCard({
 }: ProductCardProps) {
   const { metadata, isLoading: metadataLoading } = useMetadata(product.cid);
 
-  // Determine cover image URL - always use proxy to avoid CORS
-  const coverUrl = buildProxiedIpfsUrl(product.cid, 'cover.png');
+  // Determine cover image URL - use metadata.cover to get correct extension
+  // This handles both old products (cover.jpg) and new products (cover.png)
+  const coverUrl = getCoverUrl(product.cid, metadata?.cover);
 
   return (
     <Link href={`/products/${product.id}`}>

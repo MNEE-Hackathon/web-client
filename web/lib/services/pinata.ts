@@ -143,11 +143,35 @@ export async function fetchEncryptedAsset(cid: string): Promise<Blob> {
 }
 
 /**
+ * Extract cover filename from metadata cover path
+ * Handles both old format (cover.jpg) and new format (cover.png)
+ * @param coverPath - e.g., "ipfs://<CID>/cover.jpg" or just "cover.jpg"
+ * @returns The filename, e.g., "cover.jpg"
+ */
+export function extractCoverFilename(coverPath: string | undefined): string {
+  if (!coverPath) return 'cover.png'; // Default fallback
+  
+  // Extract filename from path (handles both ipfs:// URLs and simple filenames)
+  const parts = coverPath.split('/');
+  const filename = parts[parts.length - 1];
+  
+  // Validate it looks like a cover file
+  if (filename && filename.startsWith('cover.')) {
+    return filename;
+  }
+  
+  return 'cover.png'; // Default fallback
+}
+
+/**
  * Get cover image URL (proxied)
  * For use with next/image or img tags
+ * @param cid - The IPFS CID
+ * @param coverPath - Optional: the cover path from metadata (e.g., "ipfs://<CID>/cover.jpg")
  */
-export function getCoverUrl(cid: string, extension: string = 'png'): string {
-  return buildProxiedIpfsUrl(cid, `cover.${extension}`);
+export function getCoverUrl(cid: string, coverPath?: string): string {
+  const filename = extractCoverFilename(coverPath);
+  return buildProxiedIpfsUrl(cid, filename);
 }
 
 /**

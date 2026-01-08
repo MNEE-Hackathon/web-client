@@ -32,7 +32,7 @@ import { useProduct, useHasPurchased } from '@/lib/hooks/use-products';
 import { useMetadata } from '@/lib/hooks/use-metadata';
 import { usePurchase } from '@/lib/hooks/use-purchase';
 import { formatMneePrice, truncateAddress, formatFileSize } from '@/lib/utils';
-import { buildProxiedIpfsUrl, fetchEncryptedAsset } from '@/lib/services/pinata';
+import { getCoverUrl, fetchEncryptedAsset } from '@/lib/services/pinata';
 import { decryptFile } from '@/lib/services/lit';
 import { buildEtherscanUrl } from '@/lib/constants';
 import type { DecryptState } from '@/lib/constants/types';
@@ -76,8 +76,9 @@ export default function ProductDetailPage() {
   const isSeller = address && product?.seller.toLowerCase() === address.toLowerCase();
   const canAccess = hasPurchased || isSeller;
 
-  // Cover image URL - always use proxy to avoid CORS
-  const coverUrl = product?.cid ? buildProxiedIpfsUrl(product.cid, 'cover.png') : '';
+  // Cover image URL - use metadata.cover to get correct extension
+  // This handles both old products (cover.jpg) and new products (cover.png)
+  const coverUrl = product?.cid ? getCoverUrl(product.cid, metadata?.cover) : '';
 
   // Handle decrypt and download
   const handleDecrypt = async () => {

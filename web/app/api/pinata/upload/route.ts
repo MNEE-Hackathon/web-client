@@ -53,12 +53,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get cover extension
-    const coverExt = coverFile.name.split('.').pop() || 'png';
-
+    // Preserve the original cover extension to match metadata.cover
+    // This ensures consistency between IPFS files and metadata
+    const coverExt = coverFile.name.split('.').pop()?.toLowerCase() || 'png';
+    const coverFilename = `cover.${coverExt}`;
+    
     // Create files array for directory upload
     const files = [
-      new File([coverFile], `cover.${coverExt}`, { type: coverFile.type }),
+      new File([coverFile], coverFilename, { type: coverFile.type }),
       new File([assetFile], 'asset.enc', { type: 'application/octet-stream' }),
       new File(
         [JSON.stringify(metadata, null, 2)], 
