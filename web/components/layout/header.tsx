@@ -5,29 +5,38 @@
  * Main navigation with wallet connection
  * 
  * Uses mounted state to prevent hydration mismatch with theme
+ * Includes My Purchases notification badge
  */
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useTheme } from 'next-themes';
-import { Moon, Sun, Menu, X, ShoppingBag, Plus, User } from 'lucide-react';
+import { useAccount } from 'wagmi';
+import { Moon, Sun, Menu, X, ShoppingBag, Plus, User, Download } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { CURRENT_CHAIN, CHAIN_NAMES } from '@/lib/constants';
+import { usePurchases } from '@/lib/hooks/use-purchases';
 
 const navigation = [
   { name: 'Marketplace', href: '/', icon: ShoppingBag },
   { name: 'Create', href: '/create', icon: Plus },
+  { name: 'My Purchases', href: '/profile?tab=purchases', icon: Download, showBadge: true },
   { name: 'Profile', href: '/profile', icon: User },
 ];
 
 export function Header() {
   const pathname = usePathname();
   const { theme, setTheme, resolvedTheme } = useTheme();
+  const { isConnected } = useAccount();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+
+  // Fetch purchases for badge - only when connected
+  const { hasNewPurchases, purchaseCount, clearNewPurchaseNotification } = usePurchases();
 
   // Prevent hydration mismatch
   useEffect(() => {
@@ -54,13 +63,22 @@ export function Header() {
         {/* Desktop Navigation */}
         <div className="hidden items-center space-x-1 md:flex">
           {navigation.map((item) => {
-            const isActive = pathname === item.href;
+            const isActive = pathname === item.href || 
+              (item.href.includes('?tab=') && pathname === '/profile');
+            const showPurchaseBadge = item.showBadge && isConnected && hasNewPurchases;
+            
             return (
               <Link
                 key={item.name}
                 href={item.href}
+                onClick={() => {
+                  // Clear notification when clicking My Purchases
+                  if (item.showBadge) {
+                    clearNewPurchaseNotification();
+                  }
+                }}
                 className={cn(
-                  'flex items-center space-x-2 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                  'relative flex items-center space-x-2 rounded-md px-3 py-2 text-sm font-medium transition-colors',
                   isActive
                     ? 'bg-accent text-accent-foreground'
                     : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
@@ -68,6 +86,16 @@ export function Header() {
               >
                 <item.icon className="h-4 w-4" />
                 <span>{item.name}</span>
+                {/* New purchase badge */}
+                {showPurchaseBadge && (
+                  <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse" />
+                )}
+                {/* Purchase count badge */}
+                {item.showBadge && isConnected && purchaseCount > 0 && !hasNewPurchases && (
+                  <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                    {purchaseCount}
+                  </Badge>
+                )}
               </Link>
             );
           })}
@@ -197,14 +225,22 @@ export function Header() {
         <div className="border-t border-border/40 md:hidden">
           <div className="container space-y-1 py-3">
             {navigation.map((item) => {
-              const isActive = pathname === item.href;
+              const isActive = pathname === item.href ||
+                (item.href.includes('?tab=') && pathname === '/profile');
+              const showPurchaseBadge = item.showBadge && isConnected && hasNewPurchases;
+              
               return (
                 <Link
                   key={item.name}
                   href={item.href}
-                  onClick={() => setMobileMenuOpen(false)}
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    if (item.showBadge) {
+                      clearNewPurchaseNotification();
+                    }
+                  }}
                   className={cn(
-                    'flex items-center space-x-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                    'relative flex items-center space-x-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
                     isActive
                       ? 'bg-accent text-accent-foreground'
                       : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
@@ -212,6 +248,16 @@ export function Header() {
                 >
                   <item.icon className="h-4 w-4" />
                   <span>{item.name}</span>
+                  {/* New purchase badge */}
+                  {showPurchaseBadge && (
+                    <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                  )}
+                  {/* Purchase count */}
+                  {item.showBadge && isConnected && purchaseCount > 0 && (
+                    <Badge variant="secondary" className="ml-auto h-5 px-1.5 text-xs">
+                      {purchaseCount}
+                    </Badge>
+                  )}
                 </Link>
               );
             })}

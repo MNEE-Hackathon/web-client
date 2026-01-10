@@ -3,6 +3,11 @@
 /**
  * Product Detail Page
  * Shows product details and handles purchase/decrypt flow
+ * 
+ * Updated:
+ * - Uses PurchaseModal for 2-step purchase flow
+ * - Button always shows "Buy Now"
+ * - Decrypt text updated to "Decrypting your purchase with Lit Protocol..."
  */
 
 import { useParams } from 'next/navigation';
@@ -27,10 +32,10 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/components/ui/use-toast';
+import { PurchaseModal } from '@/components/product/purchase-modal';
 
 import { useProduct, useHasPurchased } from '@/lib/hooks/use-products';
 import { useMetadata } from '@/lib/hooks/use-metadata';
-import { usePurchase } from '@/lib/hooks/use-purchase';
 import { formatMneePrice, truncateAddress, formatFileSize } from '@/lib/utils';
 import { getCoverUrl, fetchEncryptedAsset } from '@/lib/services/pinata';
 import { decryptFile } from '@/lib/services/lit';
@@ -44,29 +49,12 @@ export default function ProductDetailPage() {
   const { toast } = useToast();
 
   // Fetch product data
-  const { product, isLoading: productLoading, error: productError } = useProduct(productId);
+  const { product, isLoading: productLoading, error: productError, refetch: refetchProduct } = useProduct(productId);
   const { metadata, isLoading: metadataLoading } = useMetadata(product?.cid);
-  const { data: hasPurchased, isLoading: purchaseCheckLoading } = useHasPurchased(address, productId);
+  const { data: hasPurchased, isLoading: purchaseCheckLoading, refetch: refetchPurchaseStatus } = useHasPurchased(address, productId);
 
-  // Purchase flow
-  const purchase = usePurchase({
-    productId,
-    price: product?.price || 0n,
-    onSuccess: () => {
-      toast({
-        title: 'Purchase successful!',
-        description: 'You can now decrypt and download the file.',
-        variant: 'success',
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: 'Purchase failed',
-        description: error,
-        variant: 'destructive',
-      });
-    },
-  });
+  // Purchase modal state
+  const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
 
   // Decrypt state
   const [decryptState, setDecryptState] = useState<DecryptState>('idle');
@@ -75,6 +63,12 @@ export default function ProductDetailPage() {
   // Check if user is the seller
   const isSeller = address && product?.seller.toLowerCase() === address.toLowerCase();
   const canAccess = hasPurchased || isSeller;
+
+  // Handle purchase success - refresh data
+  const handlePurchaseSuccess = () => {
+    refetchPurchaseStatus();
+    refetchProduct();
+  };
 
   // Cover image URL - use metadata.cover to get correct extension
   // This handles both old products (cover.jpg) and new products (cover.png)
@@ -302,19 +296,19 @@ export default function ProductDetailPage() {
                 {decryptState === 'connecting_lit' && (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Connecting to Lit...
+                    Connecting to Lit Protocol...
                   </>
                 )}
                 {decryptState === 'decrypting' && (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Decrypting...
+                    Decrypting your purchase with Lit Protocol...
                   </>
                 )}
                 {decryptState === 'downloading' && (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Downloading...
+                    Preparing download...
                   </>
                 )}
                 {decryptState === 'success' && (
@@ -334,45 +328,40 @@ export default function ProductDetailPage() {
               <Button size="lg" variant="outline" className="w-full" disabled>
                 You own this product
               </Button>
-            ) : purchase.needsApproval ? (
-              <Button
-                size="lg"
-                variant="gradient"
-                className="w-full gap-2"
-                onClick={purchase.handleApprove}
-                loading={purchase.isLoading}
-              >
-                Approve MNEE
-              </Button>
             ) : (
+              /* Buy Now button - always shows "Buy Now", opens modal for 2-step flow */
               <Button
                 size="lg"
                 variant="gradient"
                 className="w-full gap-2"
-                onClick={purchase.handlePurchase}
-                loading={purchase.isLoading}
-                disabled={purchase.hasInsufficientBalance}
+                onClick={() => setIsPurchaseModalOpen(true)}
               >
-                {purchase.hasInsufficientBalance ? (
-                  'Insufficient MNEE Balance'
-                ) : (
-                  <>
-                    <ShoppingCart className="h-4 w-4" />
-                    Buy Now
-                  </>
-                )}
+                <ShoppingCart className="h-4 w-4" />
+                Buy Now
               </Button>
             )}
 
-            {/* Error Message */}
-            {(purchase.error || decryptError) && (
+            {/* Error Message - only decrypt errors shown here, purchase errors in modal */}
+            {decryptError && (
               <p className="text-destructive text-sm mt-2 text-center">
-                {purchase.error || decryptError}
+                {decryptError}
               </p>
             )}
           </div>
         </div>
       </div>
+
+      {/* Purchase Modal */}
+      {product && (
+        <PurchaseModal
+          productId={productId}
+          price={product.price}
+          productName={product.name}
+          isOpen={isPurchaseModalOpen}
+          onClose={() => setIsPurchaseModalOpen(false)}
+          onSuccess={handlePurchaseSuccess}
+        />
+      )}
     </div>
   );
 }

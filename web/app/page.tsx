@@ -2,17 +2,23 @@
 
 /**
  * Marketplace Homepage
- * Displays all active products
+ * Displays all active products with search functionality
  */
 
+import { useState } from 'react';
 import { useAllProducts } from '@/lib/hooks/use-products';
 import { ProductGrid } from '@/components/product/product-grid';
+import { SearchBar, useProductSearch } from '@/components/product/search-bar';
 import { Button } from '@/components/ui/button';
 import { RefreshCcw, Sparkles, Shield, Zap } from 'lucide-react';
 import Link from 'next/link';
 
 export default function MarketplacePage() {
   const { products, isLoading, error, refetch, totalCount } = useAllProducts();
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  // Filter products based on search
+  const filteredProducts = useProductSearch(products, searchQuery);
 
   return (
     <div className="min-h-screen">
@@ -75,23 +81,38 @@ export default function MarketplacePage() {
 
       {/* Products Section */}
       <section id="products" className="container py-12">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h2 className="text-2xl font-bold">All Products</h2>
-            <p className="text-muted-foreground">
-              {totalCount > 0 ? `${products.length} active products` : 'No products yet'}
-            </p>
+        {/* Header with search */}
+        <div className="flex flex-col gap-4 mb-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold">All Products</h2>
+              <p className="text-muted-foreground">
+                {searchQuery 
+                  ? `${filteredProducts.length} of ${products.length} products`
+                  : totalCount > 0 
+                    ? `${products.length} active products` 
+                    : 'No products yet'
+                }
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => refetch()}
+              disabled={isLoading}
+              className="gap-2"
+            >
+              <RefreshCcw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => refetch()}
-            disabled={isLoading}
-            className="gap-2"
-          >
-            <RefreshCcw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
+          
+          {/* Search Bar */}
+          <SearchBar
+            value={searchQuery}
+            onChange={setSearchQuery}
+            className="max-w-md"
+          />
         </div>
 
         {error ? (
@@ -107,7 +128,11 @@ export default function MarketplacePage() {
             </Button>
           </div>
         ) : (
-          <ProductGrid products={products} isLoading={isLoading} />
+          <ProductGrid 
+            products={filteredProducts} 
+            isLoading={isLoading}
+            emptyMessage={searchQuery ? 'No products match your search' : undefined}
+          />
         )}
       </section>
     </div>

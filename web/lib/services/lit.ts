@@ -317,45 +317,45 @@ export async function decryptFile(
   const litResource = new LitAccessControlConditionResource('*');
 
   try {
-    // Get session signatures
+  // Get session signatures
     console.log('[Lit] Getting session signatures...');
-    const sessionSigs = await client.getSessionSigs({
-      chain,
-      resourceAbilityRequests: [
-        {
-          resource: litResource,
-          ability: LitAbility.AccessControlConditionDecryption,
-        },
-      ],
-      authNeededCallback,
-    });
+  const sessionSigs = await client.getSessionSigs({
+    chain,
+    resourceAbilityRequests: [
+      {
+        resource: litResource,
+        ability: LitAbility.AccessControlConditionDecryption,
+      },
+    ],
+    authNeededCallback,
+  });
     console.log('[Lit] Session signatures obtained');
 
     // The encrypted blob contains the ciphertext string (already base64 encoded by Lit)
     // We need to read it as TEXT, not convert to base64 again (that would cause double encoding)
     const ciphertext = await encryptedBlob.text();
-    
+
     console.log('[Lit] Decrypting file (ciphertext length: %d chars)...', ciphertext.length);
 
-    // Decrypt the file using unifiedAccessControlConditions
-    // Cast to any because Lit types don't include operator in their type definitions
-    const decryptedData = await decryptToFile(
-      {
-        unifiedAccessControlConditions: litMetadata.unifiedAccessControlConditions as Parameters<typeof decryptToFile>[0]['unifiedAccessControlConditions'],
-        chain,
-        ciphertext,
-        dataToEncryptHash: litMetadata.dataToEncryptHash,
-        sessionSigs,
-      },
-      client
-    );
+  // Decrypt the file using unifiedAccessControlConditions
+  // Cast to any because Lit types don't include operator in their type definitions
+  const decryptedData = await decryptToFile(
+    {
+      unifiedAccessControlConditions: litMetadata.unifiedAccessControlConditions as Parameters<typeof decryptToFile>[0]['unifiedAccessControlConditions'],
+      chain,
+      ciphertext,
+      dataToEncryptHash: litMetadata.dataToEncryptHash,
+      sessionSigs,
+    },
+    client
+  );
 
     console.log('[Lit] Decryption successful!');
 
-    // Convert Uint8Array to Blob - copy to new ArrayBuffer to ensure correct type
-    const outputBuffer = new ArrayBuffer(decryptedData.byteLength);
-    new Uint8Array(outputBuffer).set(decryptedData);
-    return new Blob([outputBuffer]);
+  // Convert Uint8Array to Blob - copy to new ArrayBuffer to ensure correct type
+  const outputBuffer = new ArrayBuffer(decryptedData.byteLength);
+  new Uint8Array(outputBuffer).set(decryptedData);
+  return new Blob([outputBuffer]);
   } catch (error) {
     console.error('[Lit] Decryption failed:', error);
     
