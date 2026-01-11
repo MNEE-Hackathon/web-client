@@ -69,7 +69,8 @@ export function usePurchases() {
       console.log('[usePurchases] Chain ID:', chainId);
 
       // Try event-based query first
-      let logs;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let logs: any[] = [];
       try {
         // Get current block number
         const currentBlock = await publicClient.getBlockNumber();
