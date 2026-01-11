@@ -221,7 +221,7 @@ export function ProfileContent() {
                   </Button>
                 </a>
               </div>
-              <p className="text-muted-foreground">Your MeneeMart Profile</p>
+              <p className="text-muted-foreground">Your MneeMart Profile</p>
             </div>
           </div>
 
@@ -500,4 +500,6 @@ function WithdrawButton() {
     </Button>
   );
 }
+
+
 
