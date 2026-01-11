@@ -25,7 +25,8 @@ import {
   Check,
   Loader2,
   Store,
-  Share2
+  Share2,
+  Plus
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -38,6 +39,7 @@ import { PurchaseModal } from '@/components/product/purchase-modal';
 
 import { useProduct, useHasPurchased } from '@/lib/hooks/use-products';
 import { useMetadata } from '@/lib/hooks/use-metadata';
+import { useCart } from '@/lib/hooks/use-cart';
 import { formatMneePrice, truncateAddress, formatFileSize } from '@/lib/utils';
 import { getCoverUrl, fetchEncryptedAsset } from '@/lib/services/pinata';
 import { decryptFile } from '@/lib/services/lit';
@@ -360,16 +362,25 @@ export default function ProductDetailPage() {
                 You own this product
               </Button>
             ) : (
-              /* Buy Now button - always shows "Buy Now", opens modal for 2-step flow */
-              <Button
-                size="lg"
-                variant="gradient"
-                className="w-full gap-2"
-                onClick={() => setIsPurchaseModalOpen(true)}
-              >
-                <ShoppingCart className="h-4 w-4" />
-                Buy Now
-              </Button>
+              /* Buy Now & Add to Cart buttons */
+              <div className="flex gap-3">
+                <Button
+                  size="lg"
+                  variant="gradient"
+                  className="flex-1 gap-2"
+                  onClick={() => setIsPurchaseModalOpen(true)}
+                >
+                  <ShoppingCart className="h-4 w-4" />
+                  Buy Now
+                </Button>
+                <AddToCartButton 
+                  productId={productId}
+                  productName={product.name}
+                  price={product.price}
+                  seller={product.seller}
+                  cid={product.cid}
+                />
+              </div>
             )}
 
             {/* Error Message - only decrypt errors shown here, purchase errors in modal */}
@@ -394,6 +405,72 @@ export default function ProductDetailPage() {
         />
       )}
     </div>
+  );
+}
+
+/**
+ * Add to Cart Button Component
+ */
+function AddToCartButton({
+  productId,
+  productName,
+  price,
+  seller,
+  cid,
+}: {
+  productId: number;
+  productName: string;
+  price: bigint;
+  seller: string;
+  cid: string;
+}) {
+  const { addItem, isInCart } = useCart();
+  const { toast } = useToast();
+  const inCart = isInCart(productId);
+
+  const handleAddToCart = () => {
+    if (inCart) {
+      toast({
+        title: 'Already in cart',
+        description: 'This product is already in your cart.',
+      });
+      return;
+    }
+
+    addItem({
+      productId,
+      productName,
+      price,
+      seller,
+      coverCid: cid,
+    });
+
+    toast({
+      title: 'Added to cart!',
+      description: `${productName} has been added to your cart.`,
+      variant: 'success',
+    });
+  };
+
+  return (
+    <Button
+      size="lg"
+      variant={inCart ? 'outline' : 'secondary'}
+      className="gap-2"
+      onClick={handleAddToCart}
+    >
+      {inCart ? (
+        <>
+          <Check className="h-4 w-4" />
+          In Cart
+        </>
+      ) : (
+        <>
+          <Plus className="h-4 w-4" />
+          Add to Cart
+        </>
+      )}
+    </Button>
   );
 }
 

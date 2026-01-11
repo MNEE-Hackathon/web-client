@@ -8,6 +8,7 @@
 import { ReactNode } from 'react';
 import { ThemeProvider } from './theme-provider';
 import { Web3Provider } from './web3-provider';
+import { CartProvider } from '@/lib/hooks/use-cart';
 import { Toaster } from '@/components/ui/toaster';
 
 interface ProvidersProps {
@@ -18,8 +19,10 @@ export function Providers({ children }: ProvidersProps) {
   return (
     <ThemeProvider>
       <Web3Provider>
-        {children}
-        <Toaster />
+        <CartProvider>
+          {children}
+          <Toaster />
+        </CartProvider>
       </Web3Provider>
     </ThemeProvider>
   );

@@ -16,9 +16,20 @@ import { type Address } from 'viem';
 import { mneeMartConfig, getCurrentChainId } from '@/lib/contracts';
 import { MneeMartAbi } from '@/lib/contracts/abis';
 
-// Storage keys for new purchase notification
-const STORAGE_KEY_LAST_SEEN_BLOCK = 'meneemart_last_seen_purchase_block';
-const STORAGE_KEY_LAST_SEEN_TX = 'meneemart_last_seen_purchase_tx';
+// Storage key prefixes for new purchase notification (address appended)
+const STORAGE_KEY_LAST_SEEN_BLOCK_PREFIX = 'meneemart_last_seen_purchase_block_';
+const STORAGE_KEY_LAST_SEEN_TX_PREFIX = 'meneemart_last_seen_purchase_tx_';
+
+/**
+ * Get storage keys for a specific wallet address
+ */
+function getStorageKeys(address: string) {
+  const normalizedAddress = address.toLowerCase();
+  return {
+    lastSeenBlock: `${STORAGE_KEY_LAST_SEEN_BLOCK_PREFIX}${normalizedAddress}`,
+    lastSeenTx: `${STORAGE_KEY_LAST_SEEN_TX_PREFIX}${normalizedAddress}`,
+  };
+}
 
 /**
  * Purchase record from event logs
@@ -210,18 +221,19 @@ export function usePurchases() {
 
   // Check if there are new purchases since last seen
   const checkNewPurchases = useCallback((records: PurchaseRecord[]) => {
-    if (records.length === 0) {
+    if (records.length === 0 || !address) {
       setHasNewPurchases(false);
       return;
     }
 
     try {
-      const lastSeenBlock = localStorage.getItem(STORAGE_KEY_LAST_SEEN_BLOCK);
-      const lastSeenTx = localStorage.getItem(STORAGE_KEY_LAST_SEEN_TX);
+      const keys = getStorageKeys(address);
+      const lastSeenBlock = localStorage.getItem(keys.lastSeenBlock);
+      const lastSeenTx = localStorage.getItem(keys.lastSeenTx);
 
       if (!lastSeenBlock && !lastSeenTx) {
         // First time - no notification needed, mark all as seen
-        markAllAsSeen(records);
+        markAllAsSeenInternal(records, address);
         setHasNewPurchases(false);
         return;
       }
@@ -240,25 +252,43 @@ export function usePurchases() {
     } catch (err) {
       console.warn('[usePurchases] Cannot access localStorage:', err);
     }
-  }, []);
+  }, [address]);
+
+  // Internal function to mark purchases as seen (used by checkNewPurchases)
+  function markAllAsSeenInternal(records: PurchaseRecord[], userAddress: string) {
+    if (records.length === 0) return;
+
+    try {
+      const keys = getStorageKeys(userAddress);
+      const recordWithBlock = records.find(r => r.blockNumber > 0n);
+      if (recordWithBlock) {
+        localStorage.setItem(keys.lastSeenBlock, recordWithBlock.blockNumber.toString());
+        localStorage.setItem(keys.lastSeenTx, recordWithBlock.txHash);
+      }
+    } catch (err) {
+      console.warn('[usePurchases] Cannot access localStorage:', err);
+    }
+  }
 
   // Mark all purchases as seen
   const markAllAsSeen = useCallback((records?: PurchaseRecord[]) => {
+    if (!address) return;
+    
     const recordsToMark = records || purchases;
     if (recordsToMark.length === 0) return;
 
     try {
-      // Find the latest record with block info
+      const keys = getStorageKeys(address);
       const recordWithBlock = recordsToMark.find(r => r.blockNumber > 0n);
       if (recordWithBlock) {
-        localStorage.setItem(STORAGE_KEY_LAST_SEEN_BLOCK, recordWithBlock.blockNumber.toString());
-        localStorage.setItem(STORAGE_KEY_LAST_SEEN_TX, recordWithBlock.txHash);
+        localStorage.setItem(keys.lastSeenBlock, recordWithBlock.blockNumber.toString());
+        localStorage.setItem(keys.lastSeenTx, recordWithBlock.txHash);
       }
       setHasNewPurchases(false);
     } catch (err) {
       console.warn('[usePurchases] Cannot access localStorage:', err);
     }
-  }, [purchases]);
+  }, [purchases, address]);
 
   // Clear new purchase notification
   const clearNewPurchaseNotification = useCallback(() => {

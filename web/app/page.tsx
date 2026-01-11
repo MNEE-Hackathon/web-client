@@ -2,20 +2,23 @@
 
 /**
  * Marketplace Homepage
- * Displays all active products with search functionality
+ * Displays all active products with search functionality via URL params
  */
 
-import { useState } from 'react';
+import { Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useAllProducts } from '@/lib/hooks/use-products';
 import { ProductGrid } from '@/components/product/product-grid';
-import { SearchBar, useProductSearch } from '@/components/product/search-bar';
+import { useProductSearch } from '@/components/product/search-bar';
 import { Button } from '@/components/ui/button';
 import { RefreshCcw, Sparkles, Shield, Zap } from 'lucide-react';
 import Link from 'next/link';
 
-export default function MarketplacePage() {
+function MarketplaceContent() {
+  const searchParams = useSearchParams();
+  const searchQuery = searchParams.get('q') || '';
+  
   const { products, isLoading, error, refetch, totalCount } = useAllProducts();
-  const [searchQuery, setSearchQuery] = useState('');
   
   // Filter products based on search
   const filteredProducts = useProductSearch(products, searchQuery);
@@ -40,17 +43,7 @@ export default function MarketplacePage() {
               true ownership, no piracy.
             </p>
             
-            {/* Search Bar - Prominent in Hero */}
-            <div className="mt-8 mx-auto max-w-xl">
-              <SearchBar
-                value={searchQuery}
-                onChange={setSearchQuery}
-                placeholder="Search products by name, description, or seller..."
-                className="w-full"
-              />
-            </div>
-            
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
               <Link href="/create">
                 <Button size="lg" variant="gradient" className="gap-2">
                   <Sparkles className="h-4 w-4" />
@@ -141,3 +134,33 @@ export default function MarketplacePage() {
   );
 }
 
+export default function MarketplacePage() {
+  return (
+    <Suspense fallback={<MarketplacePageSkeleton />}>
+      <MarketplaceContent />
+    </Suspense>
+  );
+}
+
+function MarketplacePageSkeleton() {
+  return (
+    <div className="min-h-screen">
+      <section className="relative overflow-hidden border-b border-border/40 bg-gradient-to-b from-background via-background to-muted/20">
+        <div className="container relative py-16 md:py-24">
+          <div className="mx-auto max-w-3xl text-center">
+            <div className="h-16 bg-muted/50 rounded animate-pulse mx-auto max-w-md" />
+            <div className="mt-6 h-6 bg-muted/50 rounded animate-pulse mx-auto max-w-lg" />
+          </div>
+        </div>
+      </section>
+      <section className="container py-12">
+        <div className="h-8 w-48 bg-muted/50 rounded animate-pulse mb-8" />
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-80 bg-muted/50 rounded-lg animate-pulse" />
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
