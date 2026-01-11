@@ -23,7 +23,9 @@ import {
   User, 
   ExternalLink,
   Check,
-  Loader2
+  Loader2,
+  Store,
+  Share2
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -40,6 +42,7 @@ import { formatMneePrice, truncateAddress, formatFileSize } from '@/lib/utils';
 import { getCoverUrl, fetchEncryptedAsset } from '@/lib/services/pinata';
 import { decryptFile } from '@/lib/services/lit';
 import { buildEtherscanUrl } from '@/lib/constants';
+import { shareProductUrl } from '@/lib/hooks/use-store';
 import type { DecryptState } from '@/lib/constants/types';
 
 export default function ProductDetailPage() {
@@ -225,7 +228,7 @@ export default function ProductDetailPage() {
           </div>
 
           {/* Seller & Stats */}
-          <div className="flex flex-wrap gap-4 text-sm">
+          <div className="flex flex-wrap items-center gap-4 text-sm">
             <div className="flex items-center gap-2 text-muted-foreground">
               <User className="h-4 w-4" />
               <span>Seller:</span>
@@ -242,6 +245,34 @@ export default function ProductDetailPage() {
             <div className="flex items-center gap-2 text-muted-foreground">
               <ShoppingCart className="h-4 w-4" />
               <span>{product.salesCount} sales</span>
+            </div>
+            
+            {/* View Store & Share buttons */}
+            <div className="flex items-center gap-2 ml-auto">
+              <Link href={`/store/${product.seller}`}>
+                <Button variant="outline" size="sm" className="gap-1.5">
+                  <Store className="h-3.5 w-3.5" />
+                  View Store
+                </Button>
+              </Link>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="gap-1.5"
+                onClick={async () => {
+                  const success = await shareProductUrl(productId, product.name);
+                  if (success) {
+                    toast({
+                      title: 'Link copied!',
+                      description: 'Product link has been copied to clipboard.',
+                      variant: 'success',
+                    });
+                  }
+                }}
+              >
+                <Share2 className="h-3.5 w-3.5" />
+                Share
+              </Button>
             </div>
           </div>
 

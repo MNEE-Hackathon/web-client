@@ -39,7 +39,18 @@ export default function MarketplacePage() {
               Your purchase unlocks encrypted files through Lit Protocol — 
               true ownership, no piracy.
             </p>
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+            
+            {/* Search Bar - Prominent in Hero */}
+            <div className="mt-8 mx-auto max-w-xl">
+              <SearchBar
+                value={searchQuery}
+                onChange={setSearchQuery}
+                placeholder="Search products by name, description, or seller..."
+                className="w-full"
+              />
+            </div>
+            
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
               <Link href="/create">
                 <Button size="lg" variant="gradient" className="gap-2">
                   <Sparkles className="h-4 w-4" />
@@ -81,38 +92,29 @@ export default function MarketplacePage() {
 
       {/* Products Section */}
       <section id="products" className="container py-12">
-        {/* Header with search */}
-        <div className="flex flex-col gap-4 mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold">All Products</h2>
-              <p className="text-muted-foreground">
-                {searchQuery 
-                  ? `${filteredProducts.length} of ${products.length} products`
-                  : totalCount > 0 
-                    ? `${products.length} active products` 
-                    : 'No products yet'
-                }
-              </p>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => refetch()}
-              disabled={isLoading}
-              className="gap-2"
-            >
-              <RefreshCcw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-              Refresh
-            </Button>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h2 className="text-2xl font-bold">All Products</h2>
+            <p className="text-muted-foreground">
+              {searchQuery 
+                ? `${filteredProducts.length} of ${products.length} products matching "${searchQuery}"`
+                : totalCount > 0 
+                  ? `${products.length} active products` 
+                  : 'No products yet'
+              }
+            </p>
           </div>
-          
-          {/* Search Bar */}
-          <SearchBar
-            value={searchQuery}
-            onChange={setSearchQuery}
-            className="max-w-md"
-          />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="gap-2"
+          >
+            <RefreshCcw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
         </div>
 
         {error ? (

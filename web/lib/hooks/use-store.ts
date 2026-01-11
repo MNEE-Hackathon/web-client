@@ -154,3 +154,59 @@ export async function shareStoreUrl(
   return copyStoreUrl(address);
 }
 
+// ===========================================
+// Product Sharing
+// ===========================================
+
+/**
+ * Generate shareable product URL
+ */
+export function getProductUrl(productId: number, baseUrl?: string): string {
+  const base = baseUrl || (typeof window !== 'undefined' ? window.location.origin : '');
+  return `${base}/products/${productId}`;
+}
+
+/**
+ * Copy product URL to clipboard
+ */
+export async function copyProductUrl(productId: number): Promise<boolean> {
+  try {
+    const url = getProductUrl(productId);
+    await navigator.clipboard.writeText(url);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Share product URL (Web Share API for mobile)
+ */
+export async function shareProductUrl(
+  productId: number,
+  productName?: string
+): Promise<boolean> {
+  const url = getProductUrl(productId);
+  const title = productName || `Product #${productId}`;
+  
+  // Check if Web Share API is available (mobile)
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: `${title} - MneeMart`,
+        text: `Check out this product on MneeMart!`,
+        url,
+      });
+      return true;
+    } catch (err) {
+      // User cancelled or share failed
+      if (err instanceof Error && err.name !== 'AbortError') {
+        console.error('[shareProductUrl] Share failed:', err);
+      }
+    }
+  }
+  
+  // Fallback to clipboard copy
+  return copyProductUrl(productId);
+}
+
