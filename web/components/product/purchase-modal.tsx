@@ -334,7 +334,7 @@ export function PurchaseModal({
                       ? 'Confirm in your wallet...'
                       : isWaitingApproval
                       ? 'Waiting for confirmation...'
-                      : 'Allow MeneeMart to spend your MNEE'
+                      : 'Allow MneeMart to spend your MNEE'
                     }
                   </p>
                 </div>

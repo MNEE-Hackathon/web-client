@@ -137,8 +137,8 @@ export async function shareStoreUrl(
   if (navigator.share) {
     try {
       await navigator.share({
-        title: `${title} - MeneeMart`,
-        text: `Check out this creator store on MeneeMart!`,
+        title: `${title} - MneeMart`,
+        text: `Check out this creator store on MneeMart!`,
         url,
       });
       return true;

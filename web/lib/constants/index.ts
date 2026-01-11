@@ -1,6 +1,6 @@
 /**
  * Application Constants
- * Centralized configuration for the MeneeMart frontend
+ * Centralized configuration for the MneeMart frontend
  */
 
 // ===========================================
@@ -85,7 +85,7 @@ export const LIT_CAPACITY_TOKEN_ID =
 // ===========================================
 
 export const APP_CONFIG = {
-  name: 'MeneeMart',
+  name: 'MneeMart',
   description: 'Pay-to-Decrypt Web3 Marketplace',
   url: 'https://meneemart.xyz',
   // Token decimals (MNEE uses 18 decimals like ETH)

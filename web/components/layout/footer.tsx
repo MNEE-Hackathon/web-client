@@ -17,7 +17,7 @@ export function Footer() {
               <div className="flex h-6 w-6 items-center justify-center rounded-md bg-gradient-to-br from-mnee-500 to-purple-600">
                 <span className="text-xs font-bold text-white">M</span>
               </div>
-              <span className="font-semibold">MeneeMart</span>
+              <span className="font-semibold">MneeMart</span>
             </div>
             <p className="mt-2 text-center text-sm text-muted-foreground md:text-left">
               Pay-to-Decrypt Web3 Marketplace
@@ -80,7 +80,7 @@ export function Footer() {
 
         {/* Copyright */}
         <div className="mt-6 border-t border-border/40 pt-6 text-center text-xs text-muted-foreground">
-          <p>© {new Date().getFullYear()} MeneeMart. Built for MNEE Hackathon.</p>
+          <p>© {new Date().getFullYear()} MneeMart. Built for MNEE Hackathon.</p>
         </div>
       </div>
     </footer>

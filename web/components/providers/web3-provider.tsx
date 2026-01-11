@@ -80,7 +80,7 @@ export function Web3Provider({ children }: Web3ProviderProps) {
           modalSize="compact"
           initialChain={getCurrentChainId()}
           appInfo={{
-            appName: 'MeneeMart',
+            appName: 'MneeMart',
             learnMoreUrl: 'https://meneemart.xyz/about',
           }}
         >

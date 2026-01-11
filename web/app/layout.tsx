@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   },
   description: APP_CONFIG.description,
   keywords: ['MNEE', 'Web3', 'Marketplace', 'Pay-to-Decrypt', 'IPFS', 'Ethereum'],
-  authors: [{ name: 'MeneeMart Team' }],
+  authors: [{ name: 'MneeMart Team' }],
   openGraph: {
     type: 'website',
     locale: 'en_US',

@@ -1,10 +1,10 @@
-This is a sample text file for MeneeMart demo.
+This is a sample text file for MneeMart demo.
 
 ========================
-MeneeMart Demo Content
+MneeMart Demo Content
 ========================
 
-Thank you for testing MeneeMart - the Pay-to-Decrypt Web3 Marketplace!
+Thank you for testing MneeMart - the Pay-to-Decrypt Web3 Marketplace!
 
 This file demonstrates how encrypted content works:
 1. The seller uploads a file which gets encrypted using Lit Protocol

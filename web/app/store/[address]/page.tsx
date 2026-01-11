@@ -285,7 +285,7 @@ export default function SellerStorePage() {
             <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold">Start Selling</h3>
             <p className="text-muted-foreground mt-2">
-              Create your first product to start selling on MeneeMart
+              Create your first product to start selling on MneeMart
             </p>
             <Link href="/create">
               <Button variant="gradient" className="mt-4">
