@@ -109,14 +109,3 @@ components/
   product/
     purchase-modal.tsx  # Purchase flow (two-step: approve → buy)
 ```
-
----
-
-## Environment Variables (.env)
-
-- `NEXT_PUBLIC_CHAIN=sepolia|mainnet`
-- `NEXT_PUBLIC_MNEEMART_ADDRESS`
-- `NEXT_PUBLIC_MNEE_ADDRESS`
-- `PINATA_JWT` (server-side only)
-- `NEXT_PUBLIC_LIT_NETWORK`
-
