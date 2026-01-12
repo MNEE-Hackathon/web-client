@@ -29,7 +29,7 @@ Buyers get instant, permanent access to what they purchase — no subscriptions,
 ## MNEE Assets
 - Deployment Address: https://etherscan.io/address/0x0e6e5a1baa4768668976070138392e9b2f9ab432
 - Track: Commerce & Creator Tools
-- Youtube Video:
+- Youtube Video: https://youtu.be/_fgiqyFY19w?si=tLtcbemBZqPjT1rM
 - Pitch Deck: https://www.canva.com/design/DAG-NUlXTO0/nGqRkyuyYfMrbi7KekdOoQ/edit?utm_content=DAG-NUlXTO0&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton
 - Demo URL: https://mneemart.vercel.app/
 
