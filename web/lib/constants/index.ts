@@ -86,7 +86,7 @@ export const LIT_CAPACITY_TOKEN_ID =
 
 export const APP_CONFIG = {
   name: 'MneeMart',
-  description: 'Pay-to-Decrypt Web3 Marketplace',
+  description: 'Digital Products Marketplace',
   url: 'https://meneemart.xyz',
   // Token decimals (MNEE uses 18 decimals like ETH)
   tokenDecimals: 18,

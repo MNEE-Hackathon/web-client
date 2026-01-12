@@ -33,14 +33,14 @@ function MarketplaceContent() {
         <div className="container relative py-16 md:py-24">
           <div className="mx-auto max-w-3xl text-center">
             <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
-              <span className="gradient-text">Pay-to-Decrypt</span>
+              <span className="gradient-text">Digital Products</span>
               <br />
-              <span className="text-foreground">Web3 Marketplace</span>
+              <span className="text-foreground">Marketplace</span>
             </h1>
             <p className="mt-6 text-lg text-muted-foreground">
               Buy digital content with MNEE stablecoin. 
               Your purchase unlocks encrypted files through Lit Protocol — 
-              true ownership, no piracy.
+              Truly Permissionless.
             </p>
             
             <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
@@ -62,7 +62,7 @@ function MarketplaceContent() {
               <Shield className="h-8 w-8 text-mnee-500" />
               <h3 className="mt-3 font-semibold">Encrypted Content</h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                Files are encrypted before upload. Only buyers can decrypt.
+                Files are secured by Lit Protocol with buyer only decryption.
               </p>
             </div>
             <div className="rounded-lg border border-border/50 bg-card/50 p-4 backdrop-blur-sm">

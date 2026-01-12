@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     template: `%s | ${APP_CONFIG.name}`,
   },
   description: APP_CONFIG.description,
-  keywords: ['MNEE', 'Web3', 'Marketplace', 'Pay-to-Decrypt', 'IPFS', 'Ethereum'],
+  keywords: ['MNEE', 'Web3', 'Marketplace', 'Digital Products', 'IPFS', 'Ethereum', 'Lit Protocol'],
   authors: [{ name: 'MneeMart Team' }],
   openGraph: {
     type: 'website',

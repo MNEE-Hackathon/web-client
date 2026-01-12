@@ -10,9 +10,9 @@ export function Footer() {
   return (
     <footer className="border-t border-border/40 bg-background/95">
       <div className="container py-8">
-        <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
+        <div className="flex flex-col items-center gap-4 md:flex-row">
           {/* Logo & Description */}
-          <div className="flex flex-col items-center md:items-start">
+          <div className="flex flex-1 flex-col items-center md:items-start">
             <div className="flex items-center space-x-2">
               <div className="flex h-6 w-6 items-center justify-center rounded-md bg-gradient-to-br from-mnee-500 to-purple-600">
                 <span className="text-xs font-bold text-white">M</span>
@@ -20,12 +20,12 @@ export function Footer() {
               <span className="font-semibold">MneeMart</span>
             </div>
             <p className="mt-2 text-center text-sm text-muted-foreground md:text-left">
-              Pay-to-Decrypt Web3 Marketplace
+              Digital Products Marketplace
             </p>
           </div>
 
           {/* Links */}
-          <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-muted-foreground">
+          <div className="flex flex-1 items-center justify-center gap-4 text-sm text-muted-foreground">
             <Link
               href={EXTERNAL_LINKS.etherscan[CURRENT_CHAIN]}
               target="_blank"
@@ -35,28 +35,10 @@ export function Footer() {
               Etherscan
               <ExternalLink className="h-3 w-3" />
             </Link>
-            <Link
-              href={EXTERNAL_LINKS.safe}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1 hover:text-foreground"
-            >
-              Safe
-              <ExternalLink className="h-3 w-3" />
-            </Link>
-            <Link
-              href={EXTERNAL_LINKS.splits}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1 hover:text-foreground"
-            >
-              Splits
-              <ExternalLink className="h-3 w-3" />
-            </Link>
           </div>
 
           {/* Social Links */}
-          <div className="flex items-center space-x-4">
+          <div className="flex flex-1 items-center justify-center space-x-4 md:justify-end">
             <a
               href="https://github.com"
               target="_blank"
